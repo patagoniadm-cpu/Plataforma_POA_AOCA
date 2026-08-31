@@ -41,6 +41,16 @@
   #toast{position:fixed;bottom:24px;right:24px;left:24px;background:var(--indigo-deep);color:#fff;padding:14px 18px;border-radius:10px;font-size:12.5px;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:360px;margin-left:auto;}
   #toast.show{display:block;}
   #toast.err{background:#C0392B;}
+  .avance-row{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+  .avance-row .top2{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .avance-row .tt2{font-weight:700;font-size:12.5px;}
+  .avance-row .fecha2{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--ink-soft);}
+  .avance-row .txt2{font-size:12px;margin:6px 0;color:var(--ink);}
+  .badge-sellado{font-size:10px;font-weight:700;color:var(--ink-soft);background:var(--paper);padding:3px 9px;border-radius:999px;}
+  .avance-row textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:'Work Sans';font-size:12px;min-height:44px;margin-top:6px;}
+  .avance-row .editrow{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .avance-row input[type=range]{flex:1;accent-color:var(--indigo);}
+  .btn-mini{border:none;border-radius:7px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;background:var(--indigo-tint);color:var(--indigo-deep);}
 </style>
 </head>
 <body>
@@ -63,6 +73,12 @@
   <p style="margin:0 0 20px;"><button class="btn" style="background:#fff;border:1px solid var(--line);color:var(--indigo-deep);" onclick="exportarMiReporte()" id="btnExportarMio">⤓ Exportar mi reporte de esta semana</button></p>
 
   <div id="lista"><div class="empty">Cargando tus tareas…</div></div>
+
+  <div class="panel" id="panelMisAvances" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:20px;">
+    <h2 style="font-size:15px;margin:0 0 4px;color:var(--indigo-deep);">Lo que ya cargaste esta semana</h2>
+    <p class="hint" style="font-size:11.5px;color:var(--ink-soft);margin:0 0 14px;">Podés editar el texto o el % mientras Mónica todavía no lo revisó. Una vez revisado, queda sellado como registro oficial y no se puede tocar.</p>
+    <div id="listaMisAvances"></div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -89,6 +105,7 @@ function init() {
   if (!emailActual) { cambiarUsuario(); return; }
   document.getElementById('emailActual').textContent = emailActual;
   cargarTareas();
+  cargarMisAvances();
 }
 
 function cambiarUsuario() {
@@ -98,6 +115,7 @@ function cambiarUsuario() {
     localStorage.setItem('aoca_email', emailActual);
     document.getElementById('emailActual').textContent = emailActual;
     cargarTareas();
+    cargarMisAvances();
   }
 }
 
@@ -133,6 +151,63 @@ async function cargarTareas() {
   }
 }
 
+async function cargarMisAvances() {
+  const cont = document.getElementById('listaMisAvances');
+  cont.innerHTML = '<div class="empty">Cargando…</div>';
+  try {
+    const res = await fetch(WEBAPP_URL + '?action=misAvances&email=' + encodeURIComponent(emailActual) + '&semana=' + semana);
+    const avances = await res.json();
+    if (!avances.length) {
+      cont.innerHTML = '<div class="empty">Todavía no cargaste nada esta semana.</div>';
+      return;
+    }
+    cont.innerHTML = avances.map((a, idx) => `
+      <div class="avance-row" id="av-${idx}">
+        <div class="top2">
+          <div><div class="tt2">${a.tituloTarea}</div><div class="fecha2">${a.fechaCarga}</div></div>
+          ${a.revisado
+            ? '<span class="badge-sellado">🔒 Ya revisado</span>'
+            : `<button class="btn-mini" onclick="mostrarEdicion(${idx})">✎ Editar</button>`}
+        </div>
+        <p class="txt2" id="txt2-${idx}">"${a.queHice}" — ${a.avancePct}%</p>
+        <div id="edicion-${idx}" style="display:none;">
+          <textarea id="editTxt-${idx}">${a.queHice}</textarea>
+          <div class="editrow">
+            <input type="range" id="editPct-${idx}" min="0" max="100" value="${a.avancePct}"
+                   oninput="document.getElementById('editLbl-${idx}').textContent=this.value+'%'">
+            <span id="editLbl-${idx}" style="font-weight:700;font-size:11px;">${a.avancePct}%</span>
+            <button class="btn-mini" onclick="guardarEdicion('${a.idAvance}', ${idx})">Guardar cambio</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    cont.innerHTML = '<div class="empty">No se pudo cargar el historial.</div>';
+  }
+}
+
+function mostrarEdicion(idx) {
+  document.getElementById('edicion-' + idx).style.display = 'block';
+}
+
+async function guardarEdicion(idAvance, idx) {
+  const queHice = document.getElementById('editTxt-' + idx).value.trim();
+  const avancePct = Number(document.getElementById('editPct-' + idx).value);
+  if (!queHice) { showToast('El texto no puede quedar vacío.', true); return; }
+  try {
+    const res = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'editarAvance', datos: { idAvance, queHice, avancePct } })
+    });
+    const data = await res.json();
+    if (data.error) { showToast(data.error, true); return; }
+    showToast('✓ Avance actualizado.');
+    cargarMisAvances();
+  } catch (err) {
+    showToast('No se pudo guardar la edición.', true);
+  }
+}
+
 async function guardarAvance(idTarea, idx, btn) {
   const queHice = document.getElementById('txt-' + idx).value.trim();
   const avancePct = Number(document.getElementById('rng-' + idx).value);
@@ -149,6 +224,7 @@ async function guardarAvance(idTarea, idx, btn) {
     });
     showToast('✓ Avance guardado. Mónica lo revisa el lunes.');
     btn.textContent = 'Guardado ✓';
+    cargarMisAvances();
   } catch (err) {
     showToast('No se pudo guardar el avance.', true);
     btn.disabled = false;
