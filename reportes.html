@@ -140,7 +140,11 @@ async function exportar() {
       body: JSON.stringify({ action: 'exportarReporteEquipo', datos: { semana } })
     });
     const data = await res.json();
-    showToast('✓ PDF generado. <a href="' + data.url + '" target="_blank">Abrir en Drive</a>');
+    if (data.error) {
+      showToast('Error al generar el PDF: ' + data.error);
+    } else {
+      showToast('✓ PDF generado. <a href="' + data.url + '" target="_blank">Abrir en Drive</a>');
+    }
   } catch (err) {
     showToast('No se pudo generar el PDF.');
   }
