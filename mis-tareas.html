@@ -60,6 +60,7 @@
     <a href="revision-lunes.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Revisión de lunes</a>
     <a href="reportes.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Reportes</a>
     <a href="muro.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Muro</a>
+    <a href="agenda.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Agenda</a>
   </nav>
 
   <h1>Mis tareas</h1>
@@ -80,6 +81,7 @@
     </div>
     <div class="field"><label>Título de la tarea</label><input id="fTitulo" type="text" placeholder="Ej: Enviar propuesta a auspiciantes"></div>
     <div class="field"><label>Descripción (opcional)</label><textarea id="fDescripcion" rows="2"></textarea></div>
+    <div class="field"><label>Fecha para agenda (opcional) — una reunión, entrega, evento a tener en cuenta</label><input id="fFecha" type="date"></div>
     <div class="field"><label>Link al documento en Drive (opcional)</label><input id="fLink" type="text" placeholder="https://drive.google.com/..."></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="toggleModal(false)">Cancelar</button>
@@ -172,6 +174,7 @@ async function crearTarea() {
     titulo: titulo,
     descripcion: document.getElementById('fDescripcion').value,
     responsableEmail: emailActual,
+    fechaLimite: document.getElementById('fFecha').value,
     linkDrive: document.getElementById('fLink').value
   };
   try {
@@ -183,6 +186,7 @@ async function crearTarea() {
     showToast('✓ Tarea guardada y vinculada al POA.');
     document.getElementById('fTitulo').value = '';
     document.getElementById('fDescripcion').value = '';
+    document.getElementById('fFecha').value = '';
     document.getElementById('fLink').value = '';
     cargarMisTareas();
   } catch (err) {
