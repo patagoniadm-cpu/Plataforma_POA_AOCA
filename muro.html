@@ -75,8 +75,8 @@
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz79-KdirXDLcDGQREVFWNzNfw-5R0W7H-VHEKw6IlT3Ziz7ZTawoCLYOfjWHad-DrC/exec';
 let emailActual = localStorage.getItem('aoca_email');
 
-function nombreLegible(codigoHoja) {
-  return codigoHoja === 'General' ? 'General' : codigoHoja.replace(/^P_/, '').replace(/_/g, '.');
+function nombreLegible(codigoHoja, nombreReal) {
+  return nombreReal || (codigoHoja === 'General' ? 'General' : codigoHoja.replace(/^P_/, '').replace(/_/g, '.'));
 }
 
 async function init() {
@@ -87,9 +87,9 @@ async function init() {
   try {
     const res = await fetch(WEBAPP_URL + '?action=programas');
     const programas = await res.json();
-    const unicos = [...new Set(programas.map(p => p.Programa))];
+    const unicos = [...new Map(programas.map(p => [p.Programa, p.Programa_Nombre])).entries()];
     const sel = document.getElementById('selectProyecto');
-    sel.innerHTML = unicos.map(p => `<option value="${p}">${nombreLegible(p)}</option>`).join('');
+    sel.innerHTML = unicos.map(([codigo, nombre]) => `<option value="${codigo}">${nombreLegible(codigo, nombre)}</option>`).join('');
     cargarMuro();
   } catch (err) {
     document.getElementById('posts').innerHTML = '<div class="empty">No se pudo cargar la lista de programas.</div>';
