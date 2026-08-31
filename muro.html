@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Muro del proyecto · Plataforma POA AOCA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --indigo:#2F2B84; --indigo-deep:#211D5E; --indigo-tint:#EDECFA;
+    --orange:#FF7A00; --orange-tint:#FFEEDC;
+    --paper:#F6F4EF; --ink:#1B1830; --ink-soft:#5C5876; --line:#DEDBEE;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Work Sans',sans-serif;}
+  .wrap{max-width:720px;margin:0 auto;padding:30px 20px 60px;}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--indigo-deep);transform:rotate(-6deg);}
+  .brand span{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--indigo-deep);}
+  nav.links{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+  nav.links a{font-size:12px;color:var(--ink-soft);text-decoration:none;border-bottom:2px solid transparent;padding-bottom:2px;}
+  nav.links a.active{color:var(--indigo-deep);font-weight:600;border-color:var(--orange);}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;margin:0 0 4px;color:var(--indigo-deep);}
+  .hint{font-size:12px;color:var(--ink-soft);margin:0 0 18px;}
+  .field{margin-bottom:20px;}
+  .field select{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-family:'Work Sans';font-size:13px;background:#fff;}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;}
+  .post{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid var(--line);}
+  .post:last-child{border:none;}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--indigo);color:#fff;font-family:'Space Grotesk';font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .post .body{flex:1;}
+  .who{font-size:12px;font-weight:700;color:var(--indigo-deep);}
+  .meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:#A6A2C4;margin-left:6px;font-weight:400;}
+  .txt{font-size:12.5px;margin:4px 0 0;line-height:1.45;}
+  .compose{display:flex;gap:10px;margin-top:16px;align-items:flex-end;}
+  .compose textarea{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-family:'Work Sans';font-size:12.5px;min-height:44px;resize:vertical;}
+  .compose button{border:none;background:var(--orange);color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .empty{text-align:center;color:var(--ink-soft);font-size:12.5px;padding:24px;}
+  #toast{position:fixed;bottom:24px;right:24px;left:24px;background:var(--indigo-deep);color:#fff;padding:14px 18px;border-radius:10px;font-size:12.5px;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:360px;margin-left:auto;}
+  #toast.show{display:block;}
+  #toast.err{background:#C0392B;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="mark">A</div><span>Plataforma POA · AOCA</span></div>
+  <nav class="links">
+    <a href="mis-tareas.html">Mis tareas</a>
+    <a href="bitacora-semanal.html">Bitácora semanal</a>
+    <a href="revision-lunes.html">Revisión de lunes</a>
+    <a href="reportes.html">Reportes</a>
+    <a href="muro.html" class="active">Muro</a>
+  </nav>
+
+  <h1>Muro del proyecto</h1>
+  <p class="hint">Espacio compartido para comentar sobre un programa en conjunto — no hace falta que sea tu tarea para opinar.</p>
+
+  <div class="field">
+    <select id="selectProyecto" onchange="cargarMuro()"><option>Cargando programas…</option></select>
+  </div>
+
+  <div class="panel">
+    <div id="posts"><div class="empty">Elegí un programa para ver su muro.</div></div>
+    <div class="compose">
+      <textarea id="txtNuevo" placeholder="Comentar en el muro de este programa…"></textarea>
+      <button onclick="publicar()">Publicar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz79-KdirXDLcDGQREVFWNzNfw-5R0W7H-VHEKw6IlT3Ziz7ZTawoCLYOfjWHad-DrC/exec';
+let emailActual = localStorage.getItem('aoca_email');
+
+function nombreLegible(codigoHoja) {
+  return codigoHoja === 'General' ? 'General' : codigoHoja.replace(/^P_/, '').replace(/_/g, '.');
+}
+
+async function init() {
+  if (!emailActual) {
+    emailActual = prompt('Ingresá tu email de AOCA (ej: candela@aoca.org.ar):', '');
+    if (emailActual) localStorage.setItem('aoca_email', emailActual.trim());
+  }
+  try {
+    const res = await fetch(WEBAPP_URL + '?action=programas');
+    const programas = await res.json();
+    const unicos = [...new Set(programas.map(p => p.Programa))];
+    const sel = document.getElementById('selectProyecto');
+    sel.innerHTML = unicos.map(p => `<option value="${p}">${nombreLegible(p)}</option>`).join('');
+    cargarMuro();
+  } catch (err) {
+    document.getElementById('posts').innerHTML = '<div class="empty">No se pudo cargar la lista de programas.</div>';
+  }
+}
+
+async function cargarMuro() {
+  const proyecto = document.getElementById('selectProyecto').value;
+  const posts = document.getElementById('posts');
+  posts.innerHTML = '<div class="empty">Cargando…</div>';
+  try {
+    const res = await fetch(WEBAPP_URL + '?action=comentarios&tipo=proyecto&id=' + encodeURIComponent(proyecto));
+    const comentarios = await res.json();
+    if (!comentarios.length) {
+      posts.innerHTML = '<div class="empty">Todavía no hay comentarios en este programa. ¡Sé la primera!</div>';
+      return;
+    }
+    posts.innerHTML = comentarios.map(c => `
+      <div class="post">
+        <div class="avatar">${(c.autorEmail || '?')[0].toUpperCase()}</div>
+        <div class="body">
+          <span class="who">${c.autorEmail}</span><span class="meta">${c.fechaHora}</span>
+          <p class="txt">${c.texto}</p>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    posts.innerHTML = '<div class="empty">No se pudieron cargar los comentarios.</div>';
+  }
+}
+
+async function publicar() {
+  const texto = document.getElementById('txtNuevo').value.trim();
+  const proyecto = document.getElementById('selectProyecto').value;
+  if (!texto) { showToast('Escribí algo antes de publicar.', true); return; }
+  if (!emailActual) { showToast('Necesitamos tu email para publicar.', true); return; }
+  try {
+    await fetch(WEBAPP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'guardarComentario',
+        datos: { tipoReferencia: 'proyecto', idReferencia: proyecto, autorEmail: emailActual, texto }
+      })
+    });
+    document.getElementById('txtNuevo').value = '';
+    showToast('✓ Comentario publicado.');
+    cargarMuro();
+  } catch (err) {
+    showToast('No se pudo publicar el comentario.', true);
+  }
+}
+
+function showToast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+init();
+</script>
+</body>
+</html>
