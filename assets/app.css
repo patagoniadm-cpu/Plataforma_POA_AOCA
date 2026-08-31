@@ -1,0 +1,68 @@
+/* ============================================
+   Plataforma POA · AOCA — Kit visual compartido
+   Se linkea desde todas las páginas para que la
+   navegación, los botones y las transiciones se
+   sientan como un solo producto, no páginas sueltas.
+   ============================================ */
+
+:root{
+  --indigo:#2F2B84; --indigo-deep:#1A1760; --indigo-tint:#EDECFA;
+  --orange:#FF7A00; --orange-tint:#FFEEDC;
+  --turquesa:#00D2D1; --turquesa-tint:#E0FAF9;
+  --violeta:#5244FF;
+  --paper:#F6F4EF; --ink:#1B1830; --ink-soft:#5C5876; --line:#DEDBEE;
+}
+
+/* --- Transición entre páginas (fundido) --- */
+body{
+  transition: opacity .22s ease;
+}
+body.page-enter{ opacity:0; }
+body.page-exit{ opacity:0; }
+
+/* --- Nav tipo pastillas --- */
+.app-nav{
+  display:flex; gap:6px; flex-wrap:wrap; justify-content:center;
+  background:#fff; border-radius:999px; padding:6px;
+  box-shadow:0 4px 16px rgba(47,43,132,.08);
+  width:fit-content; margin:0 auto 26px;
+}
+.app-nav a{
+  font-family:'Montserrat',sans-serif;
+  font-size:12px; font-weight:600; color:var(--ink-soft);
+  text-decoration:none; padding:8px 15px; border-radius:999px;
+  transition:background .2s, color .2s, transform .15s;
+  white-space:nowrap;
+}
+.app-nav a:hover{ background:var(--indigo-tint); color:var(--indigo-deep); transform:translateY(-1px); }
+.app-nav a.active{
+  background:linear-gradient(135deg,var(--indigo) 0%,var(--violeta) 100%);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(47,43,132,.32);
+}
+
+/* Nav sobre fondo oscuro (dentro de un hero indigo) */
+.app-nav.on-dark{ background:rgba(255,255,255,.12); backdrop-filter:blur(4px); }
+.app-nav.on-dark a{ color:#D8D5F2; }
+.app-nav.on-dark a:hover{ background:rgba(255,255,255,.15); color:#fff; }
+.app-nav.on-dark a.active{ background:var(--orange); box-shadow:0 4px 12px rgba(255,122,0,.35); }
+
+/* --- Botones con efecto de onda al tocar --- */
+.btn, button{
+  position:relative; overflow:hidden;
+  transition:transform .15s, box-shadow .15s;
+}
+.btn:hover, button:hover{ transform:translateY(-2px); }
+.btn:active, button:active{ transform:translateY(0); }
+.ripple{
+  position:absolute; border-radius:50%;
+  background:rgba(255,255,255,.55);
+  transform:scale(0);
+  animation:rippleAnim .6s ease-out forwards;
+  pointer-events:none;
+}
+@keyframes rippleAnim{ to{ transform:scale(2.6); opacity:0; } }
+
+/* --- Aparición suave de bloques de contenido --- */
+.fade-in{ opacity:0; animation:fadeIn .6s ease forwards; }
+@keyframes fadeIn{ to{ opacity:1; transform:translateY(0); } from{ transform:translateY(8px); } }
