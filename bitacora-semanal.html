@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Bitácora semanal · Plataforma POA AOCA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --indigo:#2F2B84; --indigo-deep:#211D5E; --indigo-tint:#EDECFA;
+    --orange:#FF7A00; --orange-tint:#FFEEDC;
+    --green:#5BA646; --green-tint:#E8F4E3;
+    --paper:#F6F4EF; --ink:#1B1830; --ink-soft:#5C5876; --line:#DEDBEE;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Work Sans',sans-serif;}
+  .wrap{max-width:800px;margin:0 auto;padding:30px 20px 60px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:12px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--indigo-deep);transform:rotate(-6deg);}
+  .brand span{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--indigo-deep);}
+  nav.links{display:flex;gap:14px;margin-bottom:22px;}
+  nav.links a{font-size:12px;color:var(--ink-soft);text-decoration:none;border-bottom:2px solid transparent;padding-bottom:2px;}
+  nav.links a.active{color:var(--indigo-deep);font-weight:600;border-color:var(--orange);}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;margin:0 0 4px;color:var(--indigo-deep);}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--orange);letter-spacing:.06em;text-transform:uppercase;margin:0 0 18px;}
+  .who{font-size:12px;color:var(--ink-soft);margin-bottom:20px;}
+  .who button{background:none;border:none;color:var(--orange);font-weight:600;cursor:pointer;font-size:12px;text-decoration:underline;padding:0;margin-left:6px;}
+  .entry{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;}
+  .entry .prog{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--orange);text-transform:uppercase;}
+  .entry .tt{font-weight:700;font-size:13.5px;margin:3px 0 10px;}
+  .entry textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:'Work Sans';font-size:12.5px;min-height:52px;resize:vertical;}
+  .slider-row{display:flex;align-items:center;gap:10px;margin-top:12px;}
+  .slider-row input[type=range]{flex:1;accent-color:var(--indigo);}
+  .slider-row .pctlabel{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--indigo-deep);font-weight:700;width:42px;text-align:right;}
+  .entry .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+  .prev{font-size:10.5px;color:var(--ink-soft);}
+  .btn{border:none;border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Work Sans';background:var(--orange);color:#fff;}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .empty{text-align:center;color:var(--ink-soft);font-size:12.5px;padding:30px;background:#fff;border:1px solid var(--line);border-radius:14px;}
+  #toast{position:fixed;bottom:24px;right:24px;left:24px;background:var(--indigo-deep);color:#fff;padding:14px 18px;border-radius:10px;font-size:12.5px;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:360px;margin-left:auto;}
+  #toast.show{display:block;}
+  #toast.err{background:#C0392B;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><div class="mark">A</div><span>Plataforma POA · AOCA</span></div>
+  </div>
+  <nav class="links">
+    <a href="mis-tareas.html">Mis tareas</a>
+    <a href="bitacora-semanal.html" class="active">Bitácora semanal</a>
+  </nav>
+
+  <p class="eyebrow" id="semanaActual">Semana —</p>
+  <h1>¿Qué avanzaste esta semana?</h1>
+  <p class="who">Ingresaste como <b id="emailActual">—</b><button onclick="cambiarUsuario()">cambiar</button></p>
+
+  <div id="lista"><div class="empty">Cargando tus tareas…</div></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ======= CONFIGURACIÓN =======
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz79-KdirXDLcDGQREVFWNzNfw-5R0W7H-VHEKw6IlT3Ziz7ZTawoCLYOfjWHad-DrC/exec';
+// ==============================
+
+let emailActual = localStorage.getItem('aoca_email');
+const semana = semanaISO(new Date());
+
+function semanaISO(d) {
+  const date = new Date(d.getTime());
+  date.setHours(0,0,0,0);
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  const week1 = new Date(date.getFullYear(), 0, 4);
+  const semanaNum = 1 + Math.round(((date - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+  return date.getFullYear() + '-W' + String(semanaNum).padStart(2, '0');
+}
+
+function init() {
+  document.getElementById('semanaActual').textContent = 'Semana ' + semana;
+  if (!emailActual) { cambiarUsuario(); return; }
+  document.getElementById('emailActual').textContent = emailActual;
+  cargarTareas();
+}
+
+function cambiarUsuario() {
+  const email = prompt('Ingresá tu email de AOCA (ej: candela@aoca.org.ar):', emailActual || '');
+  if (email) {
+    emailActual = email.trim();
+    localStorage.setItem('aoca_email', emailActual);
+    document.getElementById('emailActual').textContent = emailActual;
+    cargarTareas();
+  }
+}
+
+async function cargarTareas() {
+  const lista = document.getElementById('lista');
+  lista.innerHTML = '<div class="empty">Cargando tus tareas…</div>';
+  try {
+    const res = await fetch(WEBAPP_URL + '?action=misTareas&email=' + encodeURIComponent(emailActual));
+    const tareas = await res.json();
+    const activas = tareas.filter(t => t.estado !== 'Completada');
+    if (!activas.length) {
+      lista.innerHTML = '<div class="empty">No tenés tareas activas todavía. Cargá una desde "Mis tareas".</div>';
+      return;
+    }
+    lista.innerHTML = activas.map((t, idx) => `
+      <div class="entry" id="entry-${idx}">
+        <div class="prog">${t.codigo_poa}</div>
+        <div class="tt">${t.titulo}</div>
+        <textarea id="txt-${idx}" placeholder="¿Qué hiciste esta semana en esta tarea?"></textarea>
+        <div class="slider-row">
+          <input type="range" id="rng-${idx}" min="0" max="100" value="${t.avance_pct || 0}"
+                 oninput="document.getElementById('lbl-${idx}').textContent = this.value + '%'">
+          <span class="pctlabel" id="lbl-${idx}">${t.avance_pct || 0}%</span>
+        </div>
+        <div class="foot">
+          <span class="prev">Avance actual: ${t.avance_pct || 0}%</span>
+          <button class="btn" onclick="guardarAvance('${t.id_tarea}', ${idx}, this)">Guardar avance</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    lista.innerHTML = '<div class="empty">No se pudieron cargar las tareas. Revisá la conexión.</div>';
+  }
+}
+
+async function guardarAvance(idTarea, idx, btn) {
+  const queHice = document.getElementById('txt-' + idx).value.trim();
+  const avancePct = Number(document.getElementById('rng-' + idx).value);
+  if (!queHice) { showToast('Contá brevemente qué hiciste antes de guardar.', true); return; }
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
+  try {
+    await fetch(WEBAPP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'guardarAvance',
+        datos: { idTarea, autorEmail: emailActual, semana, queHice, avancePct }
+      })
+    });
+    showToast('✓ Avance guardado. Mónica lo revisa el lunes.');
+    btn.textContent = 'Guardado ✓';
+  } catch (err) {
+    showToast('No se pudo guardar el avance.', true);
+    btn.disabled = false;
+    btn.textContent = 'Guardar avance';
+  }
+}
+
+function showToast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+init();
+</script>
+</body>
+</html>
