@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Plataforma POA · AOCA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --indigo:#2F2B84; --indigo-deep:#211D5E; --indigo-tint:#EDECFA;
+    --orange:#FF7A00; --orange-tint:#FFEEDC;
+    --green:#5BA646;
+    --paper:#F6F4EF; --ink:#1B1830; --ink-soft:#5C5876; --line:#DEDBEE;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Work Sans',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+  .wrap{max-width:640px;width:100%;}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:8px;justify-content:center;}
+  .brand .mark{width:42px;height:42px;border-radius:11px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:var(--indigo-deep);transform:rotate(-6deg);}
+  .brand span{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--indigo-deep);}
+  p.sub{text-align:center;color:var(--ink-soft);font-size:13px;margin:0 0 34px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;text-decoration:none;color:var(--ink);display:block;transition:transform .15s, box-shadow .15s;}
+  .card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(47,43,132,.1);}
+  .card .icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
+  .card h2{font-family:'Space Grotesk',sans-serif;font-size:15.5px;margin:0 0 4px;color:var(--indigo-deep);}
+  .card p{font-size:11.5px;color:var(--ink-soft);margin:0;line-height:1.4;}
+  @media(max-width:520px){.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="mark">A</div><span>Plataforma POA · AOCA</span></div>
+  <p class="sub">2026–2028 · Elegí dónde querés entrar</p>
+  <div class="grid">
+    <a class="card" href="mis-tareas.html">
+      <div class="icon" style="background:var(--indigo-tint);">📋</div>
+      <h2>Mis tareas</h2>
+      <p>Cargá tus tareas vinculadas al POA y sus links a Drive.</p>
+    </a>
+    <a class="card" href="bitacora-semanal.html">
+      <div class="icon" style="background:var(--orange-tint);">✍️</div>
+      <h2>Bitácora semanal</h2>
+      <p>Contá qué avanzaste esta semana en cada tarea.</p>
+    </a>
+    <a class="card" href="revision-lunes.html">
+      <div class="icon" style="background:#E8F4E3;">✅</div>
+      <h2>Revisión de lunes</h2>
+      <p>Para Dirección Ejecutiva: confirmar los avances de la semana.</p>
+    </a>
+    <a class="card" href="reportes.html">
+      <div class="icon" style="background:var(--indigo-tint);">📊</div>
+      <h2>Reportes</h2>
+      <p>Avance del equipo, por programa y por persona, exportable.</p>
+    </a>
+  </div>
+</div>
+</body>
+</html>
