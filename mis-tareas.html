@@ -47,20 +47,26 @@
   #toast.err{background:#C0392B;}
   @media(max-width:760px){.board{grid-template-columns:1fr 1fr;}}
 </style>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js" defer></script>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
     <div class="brand"><div class="mark">A</div><span>Plataforma POA · AOCA</span></div>
-    <button class="btn btn-primary" onclick="toggleModal(true)">+ Nueva tarea</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="toggleModalReq(true)">+ Requerimiento</button>
+      <button class="btn btn-primary" onclick="toggleModal(true)">+ Nueva tarea</button>
+    </div>
   </div>
-  <nav style="display:flex;gap:14px;margin-bottom:18px;">
-    <a href="mis-tareas.html" style="font-size:12px;color:var(--indigo-deep);font-weight:600;border-bottom:2px solid var(--orange);padding-bottom:2px;text-decoration:none;">Mis tareas</a>
-    <a href="bitacora-semanal.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Bitácora semanal</a>
-    <a href="revision-lunes.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Revisión de lunes</a>
-    <a href="reportes.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Reportes</a>
-    <a href="muro.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Muro</a>
-    <a href="agenda.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Agenda</a>
+    <nav class="app-nav">
+    <a href="index.html">🏠 Inicio</a>
+    <a href="mis-tareas.html">Mis tareas</a>
+    <a href="bitacora-semanal.html">Bitácora semanal</a>
+    <a href="revision-lunes.html">Revisión de lunes</a>
+    <a href="reportes.html">Reportes</a>
+    <a href="muro.html">Muro</a>
+    <a href="agenda.html">Agenda</a>
   </nav>
 
   <h1>Mis tareas</h1>
@@ -86,6 +92,23 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="toggleModal(false)">Cancelar</button>
       <button class="btn btn-primary" onclick="crearTarea()">Guardar tarea</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayReq">
+  <div class="modal">
+    <h3>Nuevo requerimiento</h3>
+    <div class="field"><label>Tipo</label>
+      <select id="rTipo"><option>Necesidad</option><option>Definición</option><option>Bloqueo</option></select>
+    </div>
+    <div class="field"><label>¿A qué tarea tuya se refiere? (opcional)</label>
+      <select id="rTarea"><option value="">— No aplica a una tarea puntual —</option></select>
+    </div>
+    <div class="field"><label>Descripción</label><textarea id="rDescripcion" rows="3" placeholder="Contá qué necesitás o qué te está bloqueando"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="toggleModalReq(false)">Cancelar</button>
+      <button class="btn btn-primary" onclick="crearRequerimiento()">Enviar requerimiento</button>
     </div>
   </div>
 </div>
@@ -131,12 +154,15 @@ async function cargarProgramas() {
   }
 }
 
+let misTareasCache = [];
+
 async function cargarMisTareas() {
   const board = document.getElementById('board');
   board.innerHTML = '<div class="empty">Cargando tus tareas…</div>';
   try {
     const res = await fetch(WEBAPP_URL + '?action=misTareas&email=' + encodeURIComponent(emailActual));
     const tareas = await res.json();
+    misTareasCache = tareas;
     renderBoard(tareas);
   } catch (err) {
     board.innerHTML = '<div class="empty">No se pudieron cargar las tareas. Revisá la URL configurada.</div>';
@@ -184,6 +210,37 @@ async function cambiarEstado(idTarea, nuevoEstado) {
 }
 
 function toggleModal(show) { document.getElementById('overlay').classList.toggle('show', show); }
+
+function toggleModalReq(show) {
+  if (show) {
+    const sel = document.getElementById('rTarea');
+    sel.innerHTML = '<option value="">— No aplica a una tarea puntual —</option>' +
+      misTareasCache.map(t => `<option value="${t.id_tarea}">${t.codigo_poa} — ${t.titulo}</option>`).join('');
+  }
+  document.getElementById('overlayReq').classList.toggle('show', show);
+}
+
+async function crearRequerimiento() {
+  const descripcion = document.getElementById('rDescripcion').value.trim();
+  if (!descripcion) { showToast('Contá brevemente qué necesitás.', true); return; }
+  const datos = {
+    tipo: document.getElementById('rTipo').value,
+    idTarea: document.getElementById('rTarea').value,
+    solicitanteEmail: emailActual,
+    descripcion: descripcion
+  };
+  try {
+    await fetch(WEBAPP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'guardarRequerimiento', datos })
+    });
+    toggleModalReq(false);
+    document.getElementById('rDescripcion').value = '';
+    showToast('✓ Requerimiento enviado. Mónica lo va a ver en sus reportes.');
+  } catch (err) {
+    showToast('No se pudo enviar el requerimiento.', true);
+  }
+}
 
 async function crearTarea() {
   const titulo = document.getElementById('fTitulo').value.trim();
