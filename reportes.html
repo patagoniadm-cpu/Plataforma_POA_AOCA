@@ -60,17 +60,20 @@
   #toast a{color:var(--turquesa);text-decoration:underline;}
   @media(max-width:700px){.kpis{grid-template-columns:1fr 1fr;}}
 </style>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js" defer></script>
 </head>
 <body>
 <div class="navbar">
-  <nav class="links">
+  <nav class="app-nav on-dark">
     <a href="index.html">🏠 Inicio</a>
     <a href="mis-tareas.html">Mis tareas</a>
     <a href="bitacora-semanal.html">Bitácora semanal</a>
     <a href="revision-lunes.html">Revisión de lunes</a>
-    <a href="reportes.html" class="active">Reportes</a>
+    <a href="reportes.html">Reportes</a>
     <a href="muro.html">Muro</a>
     <a href="agenda.html">Agenda</a>
+    <a href="requerimientos.html">Requerimientos</a>
   </nav>
 </div>
 <div class="hero">
@@ -80,9 +83,6 @@
   <button class="btn" id="btnExport" onclick="exportar()">⤓ Exportar PDF</button>
 </div>
 <div class="wrap">
-    <div><p class="eyebrow" id="semanaLbl">Semana —</p><h1>Reporte de avance</h1></div>
-    <button class="btn" id="btnExport" onclick="exportar()">⤓ Exportar PDF</button>
-  </div>
 
   <div id="contenido"><div class="empty">Cargando datos…</div></div>
 </div>
