@@ -144,6 +144,7 @@ async function cargarMisTareas() {
 }
 
 function renderBoard(tareas) {
+  const ESTADOS = ['Pendiente', 'En curso', 'Bloqueada', 'Completada'];
   const columnas = { 'Pendiente': [], 'En curso': [], 'Bloqueada': [], 'Completada': [] };
   tareas.forEach(t => {
     const col = columnas[t.estado] ? t.estado : 'Pendiente';
@@ -157,11 +158,29 @@ function renderBoard(tareas) {
         <div class="card">
           <div class="prog">${t.codigo_poa}</div>
           ${t.titulo}
-          ${t.link_drive ? `<div class="who2"><a href="${t.link_drive}" target="_blank">🔗 Ver doc</a></div>` : ''}
+          <div class="who2" style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:8px;">
+            ${t.link_drive ? `<a href="${t.link_drive}" target="_blank">🔗 Ver doc</a>` : '<span></span>'}
+            <select onchange="cambiarEstado('${t.id_tarea}', this.value)" style="font-size:10px;border:1px solid var(--line);border-radius:6px;padding:2px 4px;">
+              ${ESTADOS.map(e => `<option value="${e}" ${e === t.estado ? 'selected' : ''}>${e}</option>`).join('')}
+            </select>
+          </div>
         </div>
       `).join('') || '<div style="font-size:11px;color:var(--ink-soft)">Sin tareas</div>'}
     </div>
   `).join('');
+}
+
+async function cambiarEstado(idTarea, nuevoEstado) {
+  try {
+    await fetch(WEBAPP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'actualizarEstado', datos: { idTarea, nuevoEstado } })
+    });
+    showToast('✓ Estado actualizado a "' + nuevoEstado + '".');
+    cargarMisTareas();
+  } catch (err) {
+    showToast('No se pudo actualizar el estado.', true);
+  }
 }
 
 function toggleModal(show) { document.getElementById('overlay').classList.toggle('show', show); }
